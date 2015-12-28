@@ -146,8 +146,10 @@ const char *language_get_string(rct_string_id id)
 
 int language_open(int id)
 {
-	//TranslationToolkit - use languages from upper folder
-	static const char *languagePath = "../%s/language/%s.txt";
+	//edited for TranslationToolkit
+
+	static const char *languagePath = "%s/Localisation/data/language/%s.txt";
+	static const char *languagePathRCT = "%s/OpenRCT2/bin/data/language/%s.txt";
 	char filename[MAX_PATH];
 	char dataPath[MAX_PATH];
 
@@ -156,9 +158,23 @@ int language_open(int id)
 		return 1;
 
 	platform_get_openrct_data_path(dataPath);
+
+	int __end = 0;
+	while (__end < MAX_PATH)
+	{
+		if (dataPath[__end] == 0) { break; }
+		__end++;
+	}
+	dataPath[__end-18] = 0;
+
 	if (id != LANGUAGE_ENGLISH_UK) {
 		sprintf(filename, languagePath, dataPath, LanguagesDescriptors[LANGUAGE_ENGLISH_UK].path);
 		_languageFallback = LanguagePack::FromFile(LANGUAGE_ENGLISH_UK, filename);
+		if (_languageFallback == nullptr)
+		{
+			sprintf(filename, languagePathRCT, dataPath, LanguagesDescriptors[LANGUAGE_ENGLISH_UK].path);
+			_languageFallback = LanguagePack::FromFile(LANGUAGE_ENGLISH_UK, filename);
+		}
 	}
 
 	sprintf(filename, languagePath, dataPath, LanguagesDescriptors[id].path);
