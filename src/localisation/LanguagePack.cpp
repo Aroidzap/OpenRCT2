@@ -416,24 +416,32 @@ void LanguagePack::ParseString(IStringReader *reader)
 	}
 
 	// Rest of the line is the actual string
-	sb.Clear();
-	while (reader->TryPeek(&codepoint) && !IsNewLine(codepoint)) {
-		if (codepoint == '{') {
-			uint32 token;
-			bool isByte;
-			if (ParseToken(reader, &token, &isByte)) {
-				if (isByte) {
-					sb.Append((const utf8*)&token, 1);
-				} else {
-					sb.Append((int)token);
+	
+	//TranslationToolkit code
+	if (gShowStringNumbers == 0)
+	{
+		sb.Clear();
+		while (reader->TryPeek(&codepoint) && !IsNewLine(codepoint)) {
+			if (codepoint == '{') {
+				uint32 token;
+				bool isByte;
+				if (ParseToken(reader, &token, &isByte)) {
+					if (isByte) {
+						sb.Append((const utf8*)&token, 1);
+					}
+					else {
+						sb.Append((int)token);
+					}
 				}
-			} else {
-				// Syntax error or unknown token, ignore line entirely
-				return;
+				else {
+					// Syntax error or unknown token, ignore line entirely
+					return;
+				}
 			}
-		} else {
-			reader->Skip();
-			sb.Append(codepoint);
+			else {
+				reader->Skip();
+				sb.Append(codepoint);
+			}
 		}
 	}
 

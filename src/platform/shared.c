@@ -35,6 +35,9 @@
 #include "../util/util.h"
 #include "platform.h"
 
+//TranslationToolkit variable
+int gShowStringNumbers = 0;
+
 typedef void(*update_palette_func)(const uint8*, int, int);
 
 openrct2_cursor gCursorState;
@@ -556,7 +559,24 @@ void platform_process_messages()
 			gCursorState.touch = true;
 			break;
 #endif
+		case SDL_KEYUP:
+			// TranslationToolkit - reload language + show string numbers
+			if ((e.key.keysym.sym == SDLK_F11)&&(gShowStringNumbers!=0))
+			{
+				gShowStringNumbers = 0;
+				language_open(gConfigGeneral.language);
+				gfx_invalidate_screen();
+			}
+			break;
 		case SDL_KEYDOWN:
+			// TranslationToolkit - reload language + show string numbers
+			if((e.key.keysym.sym == SDLK_F11)&&(gShowStringNumbers != 1))
+			{
+				gShowStringNumbers = 1;
+				language_open(gConfigGeneral.language);
+				gfx_invalidate_screen();
+			}
+
 			if (gTextInputCompositionActive) break;
 
 			if (e.key.keysym.sym == SDLK_KP_ENTER){

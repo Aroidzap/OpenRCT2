@@ -64,4 +64,7 @@ extern const char *real_names[1024];
 
 extern utf8 *gUserStrings;
 
+//TranslationToolkit variable
+extern int gShowStringNumbers;
+
 #endif
