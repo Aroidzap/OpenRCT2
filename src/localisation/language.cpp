@@ -179,6 +179,11 @@ int language_open(int id)
 
 	sprintf(filename, languagePath, dataPath, LanguagesDescriptors[id].path);
 	_languageCurrent = LanguagePack::FromFile(id, filename);
+	if (_languageCurrent == nullptr)
+	{
+		sprintf(filename, languagePathRCT, dataPath, LanguagesDescriptors[id].path);
+		_languageCurrent = LanguagePack::FromFile(id, filename);
+	}
 	if (_languageCurrent != nullptr) {
 		gCurrentLanguage = id;
 

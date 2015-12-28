@@ -418,7 +418,7 @@ void LanguagePack::ParseString(IStringReader *reader)
 	// Rest of the line is the actual string
 	
 	//TranslationToolkit code
-	if (gShowStringNumbers == 0)
+	if ((gShowStringNumbers == 0)&&(_currentGroup == nullptr))
 	{
 		sb.Clear();
 		while (reader->TryPeek(&codepoint) && !IsNewLine(codepoint)) {

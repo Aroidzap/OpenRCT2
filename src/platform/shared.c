@@ -37,6 +37,8 @@
 
 //TranslationToolkit variable
 int gShowStringNumbers = 0;
+static int gSwitchLang = 0;
+static uint16 gSwitchLangID = LANGUAGE_ENGLISH_UK;
 
 typedef void(*update_palette_func)(const uint8*, int, int);
 
@@ -567,6 +569,10 @@ void platform_process_messages()
 				language_open(gConfigGeneral.language);
 				gfx_invalidate_screen();
 			}
+			if ((e.key.keysym.sym == SDLK_F10) && (gSwitchLang != 0))
+			{
+				gSwitchLang = 0;
+			}
 			break;
 		case SDL_KEYDOWN:
 			// TranslationToolkit - reload language + show string numbers
@@ -575,6 +581,26 @@ void platform_process_messages()
 				gShowStringNumbers = 1;
 				language_open(gConfigGeneral.language);
 				gfx_invalidate_screen();
+			}
+			if ((e.key.keysym.sym == SDLK_F10) && (gSwitchLang != 1))
+			{
+				gSwitchLang = 1;
+				if (gConfigGeneral.language != LANGUAGE_ENGLISH_UK) {
+					gSwitchLangID = gConfigGeneral.language;
+				}
+				if (gSwitchLangID != LANGUAGE_ENGLISH_UK)
+				{
+					if (gConfigGeneral.language == LANGUAGE_ENGLISH_UK)
+					{
+						gConfigGeneral.language = gSwitchLangID;
+					}
+					else
+					{
+						gConfigGeneral.language = LANGUAGE_ENGLISH_UK;
+					}
+					language_open(gConfigGeneral.language);
+					gfx_invalidate_screen();
+				}
 			}
 
 			if (gTextInputCompositionActive) break;
