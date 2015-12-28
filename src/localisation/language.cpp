@@ -146,7 +146,8 @@ const char *language_get_string(rct_string_id id)
 
 int language_open(int id)
 {
-	static const char *languagePath = "%s/language/%s.txt";
+	//TranslationToolkit - use languages from upper folder
+	static const char *languagePath = "../%s/language/%s.txt";
 	char filename[MAX_PATH];
 	char dataPath[MAX_PATH];
 
