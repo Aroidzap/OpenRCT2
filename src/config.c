@@ -203,6 +203,10 @@ config_property_definition _generalDefinitions[] = {
 	{ offsetof(general_configuration, show_fps),						"show_fps",						CONFIG_VALUE_TYPE_BOOLEAN,		false,							NULL					},
 	{ offsetof(general_configuration, trap_cursor),						"trap_cursor",					CONFIG_VALUE_TYPE_BOOLEAN,		false,							NULL					},
 	{ offsetof(general_configuration, auto_open_shops),					"auto_open_shops",				CONFIG_VALUE_TYPE_BOOLEAN,		false,							NULL					},
+	{ offsetof(general_configuration, scenario_select_mode),			"scenario_select_mode",			CONFIG_VALUE_TYPE_UINT8,		SCENARIO_SELECT_MODE_ORIGIN,	NULL					},
+	{ offsetof(general_configuration, scenario_unlocking_enabled),		"scenario_unlocking_enabled",	CONFIG_VALUE_TYPE_BOOLEAN,		true,							NULL					},
+	{ offsetof(general_configuration, scenario_hide_mega_park),			"scenario_hide_mega_park",		CONFIG_VALUE_TYPE_BOOLEAN,		true,							NULL					},
+
 };
 
 config_property_definition _interfaceDefinitions[] = {
@@ -1404,11 +1408,23 @@ void title_sequences_set_default()
 
 	platform_get_openrct_data_path(dataPath);
 
-	// Load OpenRCT2 title sequence
+	// RCT1 title sequence
+	sprintf(path, "%s%c%s%c%s%c", dataPath, sep, "title", sep, "rct1", sep);
+	title_sequence_open(path, language_get_string(5305));
+
+	// RCT1 (AA) title sequence
+	sprintf(path, "%s%c%s%c%s%c", dataPath, sep, "title", sep, "rct1aa", sep);
+	title_sequence_open(path, language_get_string(5306));
+
+	// RCT1 (AA + LL) title sequence
+	sprintf(path, "%s%c%s%c%s%c", dataPath, sep, "title", sep, "rct1aall", sep);
+	title_sequence_open(path, language_get_string(5307));
+
+	// RCT2 title sequence
 	sprintf(path, "%s%c%s%c%s%c", dataPath, sep, "title", sep, "rct2", sep);
 	title_sequence_open(path, language_get_string(5308));
 
-	// Load OpenRCT2 title sequence
+	// OpenRCT2 title sequence
 	sprintf(path, "%s%c%s%c%s%c", dataPath, sep, "title", sep, "openrct2", sep);
 	title_sequence_open(path, language_get_string(5309));
 }
@@ -1429,11 +1445,20 @@ void title_sequences_load_presets()
 	platform_enumerate_directories_end(dirEnumHandle);
 
 	// Check which title sequence is the current one
-	if (_stricmp(gConfigInterface.current_title_sequence_preset, "*RCT2") == 0) {
+	if (_stricmp(gConfigInterface.current_title_sequence_preset, "*RCT1") == 0) {
 		gCurrentTitleSequence = 0;
 	}
-	else if (_stricmp(gConfigInterface.current_title_sequence_preset, "*OPENRCT2") == 0) {
+	else if (_stricmp(gConfigInterface.current_title_sequence_preset, "*RCT1AA") == 0) {
 		gCurrentTitleSequence = 1;
+	}
+	else if (_stricmp(gConfigInterface.current_title_sequence_preset, "*RCT1AALL") == 0) {
+		gCurrentTitleSequence = 2;
+	}
+	else if (_stricmp(gConfigInterface.current_title_sequence_preset, "*RCT2") == 0) {
+		gCurrentTitleSequence = 3;
+	}
+	else if (_stricmp(gConfigInterface.current_title_sequence_preset, "*OPENRCT2") == 0) {
+		gCurrentTitleSequence = 4;
 	}
 	else {
 		for (i = TITLE_SEQUENCE_DEFAULT_PRESETS; i < gConfigTitleSequences.num_presets; i++) {
@@ -1479,16 +1504,13 @@ static void title_sequence_open(const char *path, const char *customName)
 		gConfigTitleSequences.presets = realloc(gConfigTitleSequences.presets, sizeof(title_sequence) * (size_t)gConfigTitleSequences.num_presets);
 
 		if (customName == NULL) {
-			char nameBuffer[MAX_PATH], *name;
+			char nameBuffer[MAX_PATH];
 			safe_strncpy(nameBuffer, path, MAX_PATH);
-			name = nameBuffer + strlen(nameBuffer) - 1;
-			while (*name == '\\' || *name == '/') {
-				*name = 0;
-				name--;
-			}
-			while (*(name - 1) != '\\' && *(name - 1) != '/') {
-				name--;
-			}
+			// Get folder name
+			// First strip off the last folder separator
+			*strrchr(nameBuffer, platform_get_path_separator()) = '\0';
+			// Then find the name of the folder
+			char *name = strrchr(nameBuffer, platform_get_path_separator()) + 1;
 			safe_strncpy(gConfigTitleSequences.presets[preset].name, name, TITLE_SEQUENCE_NAME_SIZE);
 			gConfigTitleSequences.presets[preset].path[0] = 0;
 		}
@@ -1567,6 +1589,9 @@ static void title_sequence_open(const char *path, const char *customName)
 				command.command = TITLE_SCRIPT_END;
 			} else if (_stricmp(token, "LOADMM") == 0) {
 				command.command = TITLE_SCRIPT_LOADMM;
+			} else if (_stricmp(token, "LOADRCT1") == 0) {
+				command.command = TITLE_SCRIPT_LOADRCT1;
+				command.saveIndex = atoi(part1) & 0xFF;
 			}
 		}
 		if (command.command != 0xFF) {
@@ -1587,7 +1612,7 @@ void title_sequence_save_preset_script(int preset)
 
 
 	platform_get_user_directory(path, "title sequences");
-	strcat(path, path_get_filename(gConfigTitleSequences.presets[preset].name));
+	strcat(path, gConfigTitleSequences.presets[preset].name);
 	strncat(path, &separator, 1);
 	strcat(path, "script.txt");
 

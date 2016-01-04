@@ -935,15 +935,15 @@ static void window_map_show_default_scenario_editor_buttons(rct_window *w) {
 
 static void window_map_inputsize_land(rct_window *w)
 {
-	((uint16*)TextInputDescriptionArgs)[0] = MINIMUM_TOOL_SIZE;
-	((uint16*)TextInputDescriptionArgs)[1] = MAXIMUM_TOOL_SIZE;
+	TextInputDescriptionArgs[0] = MINIMUM_TOOL_SIZE;
+	TextInputDescriptionArgs[1] = MAXIMUM_TOOL_SIZE;
 	window_text_input_open(w, WIDX_LAND_TOOL, 5128, 5129, STR_NONE, STR_NONE, 3);
 }
 
 static void window_map_inputsize_map(rct_window *w)
 {
-	((uint16*)TextInputDescriptionArgs)[0] = MINIMUM_MAP_SIZE_PRACTICAL;
-	((uint16*)TextInputDescriptionArgs)[1] = MAXIMUM_MAP_SIZE_PRACTICAL;
+	TextInputDescriptionArgs[0] = MINIMUM_MAP_SIZE_PRACTICAL;
+	TextInputDescriptionArgs[1] = MAXIMUM_MAP_SIZE_PRACTICAL;
 	window_text_input_open(w, WIDX_MAP_SIZE_SPINNER, 5130, 5131, STR_NONE, STR_NONE, 4);
 }
 
@@ -1028,7 +1028,7 @@ static void window_map_paint_peep_overlay(rct_drawpixelinfo *dpi)
 
 		color = 0x14;
 
-		if ((peep->var_0C & 0x200) != 0) {
+		if ((peep->list_flags & PEEP_LIST_FLAGS_FLASHING) != 0) {
 			if (peep->type == PEEP_TYPE_STAFF) {
 				if ((RCT2_GLOBAL(RCT2_ADDRESS_WINDOW_MAP_FLASHING_FLAGS, uint16) & (1 << 3)) != 0) {
 					color = 0x8A;
@@ -1547,11 +1547,10 @@ static uint16 map_window_get_pixel_colour_peep(int x, int y)
 	if (!(mapElement->properties.surface.ownership & OWNERSHIP_OWNED))
 		colour = 10 | (colour & 0xFF00);
 
-	const size_t count = countof(ElementTypeAddColour);
+	const int maxSupportedMapElementType = (int)countof(ElementTypeAddColour);
 	while (!map_element_is_last_for_tile(mapElement++)) {
 		int mapElementType = map_element_get_type(mapElement) >> 2;
-		if (mapElementType >= count)
-		{
+		if (mapElementType >= maxSupportedMapElementType) {
 			mapElementType = MAP_ELEMENT_TYPE_CORRUPT >> 2;
 		}
 		colour &= ElementTypeMaskColour[mapElementType];

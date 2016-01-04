@@ -58,6 +58,11 @@ utf8 **windows_get_command_line_args(int *outNumArgs);
 //     return 0;
 // }
 
+/* DllMain is already defined in one of static libraries we implicitly depend
+ * on (libcrypto), which is their bug really, but since we don't do anything in
+ * here, just comment it out.
+ */
+#ifndef __MINGW32__
 /**
  * Entry point for when the DLL is loaded. This will be removed when OpenRCT2 can be built as a stand alone application.
  */
@@ -65,6 +70,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	return TRUE;
 }
+#endif // __MINGW32__
 
 /**
  * The function that is called directly from the host application (rct2.exe)'s WinMain. This will be removed when OpenRCT2 can
@@ -927,6 +933,19 @@ bool platform_get_font_path(TTFFontDescriptor *font, utf8 *buffer)
 	strcat(buffer, font->filename);
 	return true;
 #endif
+}
+
+datetime64 platform_get_datetime_now_utc()
+{
+	// Get file time
+	FILETIME fileTime;
+	GetSystemTimeAsFileTime(&fileTime);
+	uint64 fileTime64 = ((uint64)fileTime.dwHighDateTime << 32ULL) | ((uint64)fileTime.dwLowDateTime);
+
+	// File time starts from: 1601-01-01T00:00:00Z
+	// Convert to start from: 0001-01-01T00:00:00Z
+	datetime64 utcNow = fileTime64 - 504911232000000000ULL;
+	return utcNow;
 }
 
 #endif

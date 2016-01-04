@@ -69,6 +69,17 @@ typedef struct {
 	void *data;
 } rct_gx;
 
+typedef struct {
+	uint8 blue;
+	uint8 green;
+	uint8 red;
+	uint8 alpha;
+} rct_palette_entry;
+
+typedef struct {
+	rct_palette_entry entries[256];
+} rct_palette;
+
 #define SPRITE_ID_PALETTE_COLOUR_1(colourId) ((IMAGE_TYPE_USE_PALETTE << 28) | ((colourId) << 19))
 
 extern const uint16 palette_to_g1_offset[];
@@ -138,6 +149,7 @@ int string_get_height_raw(char *buffer);
 void gfx_draw_string_centred_wrapped_partial(rct_drawpixelinfo *dpi, int x, int y, int width, int colour, rct_string_id format, void *args, int ticks);
 void gfx_draw_string_with_y_offsets(rct_drawpixelinfo *dpi, const utf8 *text, int colour, int x, int y, const sint8 *yOffsets, bool forceSpriteFont);
 int gfx_clip_string(char* buffer, int width);
+void shorten_path(utf8 *buffer, size_t bufferSize, const utf8 *path, int availableWidth);
 
 bool ttf_initialise();
 void ttf_dispose();
