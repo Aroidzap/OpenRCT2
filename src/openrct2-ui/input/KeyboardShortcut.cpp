@@ -28,6 +28,7 @@
 #include <openrct2-ui/interface/Widget.h>
 #include <openrct2-ui/interface/Window.h>
 #include <openrct2/localisation/Localisation.h>
+#include <openrct2/localisation/LocalisationToolkit.h>
 #include <openrct2/network/network.h>
 #include <openrct2/platform/platform.h>
 #include <openrct2/ride/Track.h>
@@ -745,6 +746,11 @@ static void shortcut_load_game()
     }
 }
 
+static void shortcut_localisation_toolkit_toggle_string_id()
+{
+    LocalisationToolkit::ToggleStringID();
+}
+
 namespace
 {
     const shortcut_action shortcut_table[SHORTCUT_COUNT] =
@@ -816,6 +822,7 @@ namespace
         shortcut_load_game,
         shortcut_clear_scenery,
         shortcut_gridlines_toggle,
+        shortcut_localisation_toolkit_toggle_string_id
     };
 }
 

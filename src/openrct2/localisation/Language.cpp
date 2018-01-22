@@ -25,6 +25,7 @@
 
 #include "../platform/platform.h"
 #include "Localisation.h"
+#include "LocalisationToolkit.h"
 
 // clang-format off
 const language_descriptor LanguagesDescriptors[LANGUAGE_COUNT] =
@@ -105,6 +106,9 @@ const char * language_get_string(rct_string_id id)
         if (result == nullptr)
         {
             result = "(undefined string)";
+        }
+        if (LocalisationToolkit::ShowStringID()) {
+            result = ("STR" + std::to_string(id)).c_str();
         }
     }
     return result;
