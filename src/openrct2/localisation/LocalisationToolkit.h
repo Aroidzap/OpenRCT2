@@ -1,4 +1,5 @@
 #pragma once
+#include "../common.h"
 
 class LocalisationToolkit {
 private:
@@ -6,4 +7,5 @@ private:
 public:
     static void ToggleStringID();
     static bool ShowStringID();
+    static const utf8 * GetString(rct_string_id stringId);
 };

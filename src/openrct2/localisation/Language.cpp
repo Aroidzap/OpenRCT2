@@ -108,7 +108,7 @@ const char * language_get_string(rct_string_id id)
             result = "(undefined string)";
         }
         if (LocalisationToolkit::ShowStringID()) {
-            result = ("STR" + std::to_string(id)).c_str();
+            result = LocalisationToolkit::GetString(id);
         }
     }
     return result;
