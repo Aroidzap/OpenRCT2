@@ -245,6 +245,7 @@ namespace Config
         writer->WriteSint32("default_display", model->default_display);
         writer->WriteEnum<sint32>("drawing_engine", model->drawing_engine, Enum_DrawingEngine);
         writer->WriteBoolean("uncap_fps", model->uncap_fps);
+        writer->WriteBoolean("touch_ui", model->touch_ui);
         writer->WriteBoolean("use_vsync", model->use_vsync);
         writer->WriteBoolean("test_unfinished_tracks", model->test_unfinished_tracks);
         writer->WriteBoolean("no_test_crashes", model->no_test_crashes);

@@ -37,6 +37,7 @@ typedef struct GeneralConfiguration
     bool        uncap_fps;
     bool        use_vsync;
     bool        show_fps;
+    bool        touch_ui;
     bool        minimize_fullscreen_focus_loss;
 
     // Map rendering

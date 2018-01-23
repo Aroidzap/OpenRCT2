@@ -3874,6 +3874,9 @@ enum {
     STR_CHEAT_GROUP_OPERATION = 6216,
     STR_CHEAT_GROUP_AVAILABILITY = 6217,
 
+    STR_TOUCH_UI = 6218,
+    STR_TOUCH_UI_TIP = 6219,
+
     // Have to include resource strings (from scenarios and objects) for the time being now that language is partially working
     STR_COUNT = 32768
 };
