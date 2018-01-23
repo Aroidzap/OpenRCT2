@@ -34,6 +34,7 @@
 #include "../world/Map.h"
 #include "../world/Sprite.h"
 #include "Viewport.h"
+#include "TouchUI.h"
 #include "Widget.h"
 #include "Window.h"
 #include "Window_internal.h"
@@ -871,8 +872,16 @@ rct_window *window_find_from_point(sint32 x, sint32 y)
     sint32 widget_index;
 
     for (w = RCT2_LAST_WINDOW; w >= g_window_list; w--) {
-        if (x < w->x || x >= w->x + w->width || y < w->y || y >= w->y + w->height)
-            continue;
+        if (gConfigGeneral.touch_ui) {
+            touch_ui_offset offset(w);
+            if (x < w->x + offset.left || x >= w->x + offset.right + w->width || 
+                y < w->y + offset.top || y >= w->y + offset.bottom + w->height)
+                continue;
+        }else{
+            if (x < w->x || x >= w->x + w->width || y < w->y || y >= w->y + w->height)
+                continue;
+        }
+        
 
         if (w->flags & WF_NO_BACKGROUND) {
             widget_index = window_find_widget_from_point(w, x, y);
@@ -906,10 +915,20 @@ rct_widgetindex window_find_widget_from_point(rct_window *w, sint32 x, sint32 y)
         if (widget->type == WWT_LAST) {
             break;
         } else if (widget->type != WWT_EMPTY) {
-            if (x >= w->x + widget->left && x <= w->x + widget->right &&
-                y >= w->y + widget->top && y <= w->y + widget->bottom
-            ) {
-                widget_index = i;
+            if (gConfigGeneral.touch_ui) {
+                touch_ui_offset offset(widget);
+                if (x >= w->x + widget->left + offset.left && x <= w->x + widget->right + offset.right &&
+                    y >= w->y + widget->top + offset.top && y <= w->y + widget->bottom + offset.bottom
+                    ) {
+                    widget_index = i;
+                }
+            }
+            else {
+                if (x >= w->x + widget->left && x <= w->x + widget->right &&
+                    y >= w->y + widget->top && y <= w->y + widget->bottom
+                    ) {
+                    widget_index = i;
+                }
             }
         }
     }
@@ -931,8 +950,16 @@ rct_widgetindex window_find_widget_from_point(rct_window *w, sint32 x, sint32 y)
  */
 void window_invalidate(rct_window *window)
 {
-    if (window != nullptr)
-        gfx_set_dirty_blocks(window->x, window->y, window->x + window->width, window->y + window->height);
+    if (window != nullptr) {
+        if (gConfigGeneral.touch_ui) {
+            touch_ui_offset offset(window);
+            gfx_set_dirty_blocks(window->x + offset.left, window->y + offset.top, 
+                window->x + offset.right + window->width, window->y + offset.bottom + window->height);
+        }
+        else {
+            gfx_set_dirty_blocks(window->x, window->y, window->x + window->width, window->y + window->height);
+        }
+    }
 }
 
 /**
@@ -995,7 +1022,15 @@ void widget_invalidate(rct_window *w, rct_widgetindex widgetIndex)
     if (widget->left == -2)
         return;
 
-    gfx_set_dirty_blocks(w->x + widget->left, w->y + widget->top, w->x + widget->right + 1, w->y + widget->bottom + 1);
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        gfx_set_dirty_blocks(w->x + widget->left + offset.left, w->y + widget->top + offset.top, 
+            w->x + widget->right + offset.right + 1, w->y + widget->bottom + offset.bottom + 1);
+    }
+    else {
+        gfx_set_dirty_blocks(w->x + widget->left, w->y + widget->top, w->x + widget->right + 1, w->y + widget->bottom + 1);
+    }
+    
 }
 
 /**
@@ -1746,17 +1781,34 @@ void window_draw_widgets(rct_window *w, rct_drawpixelinfo *dpi)
     widgetIndex = 0;
     for (widget = w->widgets; widget->type != WWT_LAST; widget++) {
         // Check if widget is outside the draw region
-        if (w->x + widget->left < dpi->x + dpi->width && w->x + widget->right >= dpi->x)
-            if (w->y + widget->top < dpi->y + dpi->height && w->y + widget->bottom >= dpi->y)
-                widget_draw(dpi, w, widgetIndex);
+        if (gConfigGeneral.touch_ui) {
+            touch_ui_offset offset(widget);
+            if (w->x + widget->left + offset.left < dpi->x + dpi->width && w->x + widget->right + offset.right >= dpi->x)
+                if (w->y + widget->top + offset.top < dpi->y + dpi->height && w->y + widget->bottom + offset.bottom >= dpi->y)
+                    widget_draw(dpi, w, widgetIndex);
+        }
+        else {
+            if (w->x + widget->left < dpi->x + dpi->width && w->x + widget->right >= dpi->x)
+                if (w->y + widget->top < dpi->y + dpi->height && w->y + widget->bottom >= dpi->y)
+                    widget_draw(dpi, w, widgetIndex);
+        }
 
         widgetIndex++;
     }
 
     //todo: something missing here too? Between 006EC32B and 006EC369
 
-    if (w->flags & WF_WHITE_BORDER_MASK) {
-        gfx_fill_rect_inset(dpi, w->x, w->y, w->x + w->width - 1, w->y + w->height - 1, COLOUR_WHITE, INSET_RECT_FLAG_FILL_NONE);
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(w);
+        if (w->flags & WF_WHITE_BORDER_MASK) {
+            gfx_fill_rect_inset(dpi, w->x + offset.left, w->y + offset.top, 
+                w->x + offset.right + w->width - 1, w->y + offset.bottom + w->height - 1, COLOUR_WHITE, INSET_RECT_FLAG_FILL_NONE);
+        }
+    }
+    else {
+        if (w->flags & WF_WHITE_BORDER_MASK) {
+            gfx_fill_rect_inset(dpi, w->x, w->y, w->x + w->width - 1, w->y + w->height - 1, COLOUR_WHITE, INSET_RECT_FLAG_FILL_NONE);
+        }
     }
 }
 
@@ -2257,9 +2309,16 @@ static void window_invalidate_pressed_image_buttons(rct_window *w)
     for (widget = w->widgets; widget->type != WWT_LAST; widget++, widgetIndex++) {
         if (widget->type != WWT_IMGBTN)
             continue;
-
-        if (widget_is_pressed(w, widgetIndex) || widget_is_active_tool(w, widgetIndex))
-            gfx_set_dirty_blocks(w->x, w->y, w->x + w->width, w->y + w->height);
+        if (gConfigGeneral.touch_ui) {
+            touch_ui_offset offset(w);
+            if (widget_is_pressed(w, widgetIndex) || widget_is_active_tool(w, widgetIndex))
+                gfx_set_dirty_blocks(w->x + offset.left, w->y + offset.top, 
+                    w->x + offset.right + w->width, w->y + offset.bottom + w->height);
+        }
+        else {
+            if (widget_is_pressed(w, widgetIndex) || widget_is_active_tool(w, widgetIndex))
+                gfx_set_dirty_blocks(w->x, w->y, w->x + w->width, w->y + w->height);
+        }
     }
 }
 

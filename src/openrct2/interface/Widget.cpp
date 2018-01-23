@@ -23,6 +23,8 @@
 #include "../localisation/Localisation.h"
 #include "../util/Util.h"
 #include "../Context.h"
+#include "../config/Config.h"
+#include "TouchUI.h"
 #include "Widget.h"
 #include "Window.h"
 #include "Window_internal.h"
@@ -189,6 +191,13 @@ static void widget_frame_draw(rct_drawpixelinfo *dpi, rct_window *w, rct_widgeti
     sint32 t = w->y + widget->top;
     sint32 r = w->x + widget->right;
     sint32 b = w->y + widget->bottom;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l += offset.left;
+        t += offset.top;
+        r += offset.right;
+        b += offset.bottom;
+    }
 
     //
     uint8 press = ((w->flags & WF_10) ? INSET_RECT_FLAG_FILL_MID_LIGHT : 0);
@@ -369,6 +378,13 @@ static void widget_text_button(rct_drawpixelinfo *dpi, rct_window *w, rct_widget
     sint32 t = w->y + widget->top;
     sint32 r = w->x + widget->right;
     sint32 b = w->y + widget->bottom;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l += offset.left;
+        t += offset.top;
+        r += offset.right;
+        b += offset.bottom;
+    }
 
     // Get the colour
     uint8 colour = w->colours[widget->colour];
@@ -407,24 +423,52 @@ static void widget_text_centred(rct_drawpixelinfo *dpi, rct_window *w, rct_widge
         colour |= COLOUR_FLAG_INSET;
 
     // Resolve the absolute ltrb
-    sint32 l = w->x + widget->left;
-    sint32 r = w->x + widget->right;
-    sint32 t;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        sint32 l = w->x + widget->left + offset.left;
+        sint32 r = w->x + widget->right + offset.right;
+        sint32 t;
 
-    if (widget->type == WWT_BUTTON || widget->type == WWT_TABLE_HEADER)
-        t = w->y + std::max<sint32>(widget->top, (widget->top + widget->bottom) / 2 - 5);
-    else
-        t = w->y + widget->top;
+        if (widget->type == WWT_BUTTON || widget->type == WWT_TABLE_HEADER)
+            t = w->y + std::max<sint32>(widget->top + offset.top, 
+                (widget->top + offset.top + widget->bottom + offset.bottom) / 2 - 5);
+        else
+            t = w->y + widget->top + offset.top;
 
-    gfx_draw_string_centred_clipped(
-        dpi,
-        widget->text,
-        gCommonFormatArgs,
-        colour,
-        (l + r + 1) / 2 - 1,
-        t,
-        widget->right - widget->left - 2
-    );
+        if(offset.spinner_button){
+            t += 2;
+        }
+
+        gfx_draw_string_centred_clipped(
+            dpi,
+            widget->text,
+            gCommonFormatArgs,
+            colour,
+            (l + r + 1) / 2 - 1,
+            t,
+            widget->right + offset.right - (widget->left + offset.left) - 2
+        );
+    }
+    else{
+        sint32 l = w->x + widget->left;
+        sint32 r = w->x + widget->right;
+        sint32 t;
+
+        if (widget->type == WWT_BUTTON || widget->type == WWT_TABLE_HEADER)
+            t = w->y + std::max<sint32>(widget->top, (widget->top + widget->bottom) / 2 - 5);
+        else
+            t = w->y + widget->top;
+
+        gfx_draw_string_centred_clipped(
+            dpi,
+            widget->text,
+            gCommonFormatArgs,
+            colour,
+            (l + r + 1) / 2 - 1,
+            t,
+            widget->right - widget->left - 2
+        );
+    }
 }
 
 /**
@@ -554,6 +598,13 @@ static void widget_caption_draw(rct_drawpixelinfo *dpi, rct_window *w, rct_widge
     sint32 t = w->y + widget->top;
     sint32 r = w->x + widget->right;
     sint32 b = w->y + widget->bottom;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l += offset.left;
+        t += offset.top;
+        r += offset.right;
+        b += offset.bottom;
+    }
 
     // Get the colour
     uint8 colour = w->colours[widget->colour];
@@ -577,6 +628,13 @@ static void widget_caption_draw(rct_drawpixelinfo *dpi, rct_window *w, rct_widge
     l = widget->left + w->x + 2;
     t = widget->top + w->y + 1;
     sint32 width = widget->right - widget->left - 4;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l += offset.left;
+        t += offset.top / 2;
+        width += offset.right - offset.left;
+    }
+
     if ((widget + 1)->type == WWT_CLOSEBOX) {
         width -= 10;
         if ((widget + 2)->type == WWT_CLOSEBOX)
@@ -600,6 +658,13 @@ static void widget_closebox_draw(rct_drawpixelinfo *dpi, rct_window *w, rct_widg
     sint32 t = w->y + widget->top;
     sint32 r = w->x + widget->right;
     sint32 b = w->y + widget->bottom;
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l += offset.left;
+        t += offset.top;
+        r += offset.right;
+        b += offset.bottom;
+    }
 
     // Check if the button is pressed down
     uint8 press = 0;
@@ -617,8 +682,15 @@ static void widget_closebox_draw(rct_drawpixelinfo *dpi, rct_window *w, rct_widg
     if (widget->text == STR_NONE)
         return;
 
-    l = w->x + (widget->left + widget->right) / 2 - 1;
-    t = w->y + std::max<sint32>(widget->top, (widget->top + widget->bottom) / 2 - 5);
+    if (gConfigGeneral.touch_ui) {
+        touch_ui_offset offset(widget);
+        l = w->x + (widget->left + offset.left + widget->right + offset.right) / 2 - 1;
+        t = w->y + std::max<sint32>(widget->top + offset.top, (widget->top + offset.top + widget->bottom + offset.bottom) / 2 - 5);
+    }
+    else {
+        l = w->x + (widget->left + widget->right) / 2 - 1;
+        t = w->y + std::max<sint32>(widget->top, (widget->top + widget->bottom) / 2 - 5);
+    }
 
     if (widget_is_disabled(w, widgetIndex))
         colour |= COLOUR_FLAG_INSET;
