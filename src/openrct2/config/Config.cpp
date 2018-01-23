@@ -168,6 +168,7 @@ namespace Config
             model->default_display = reader->GetSint32("default_display", 0);
             model->drawing_engine = reader->GetEnum<sint32>("drawing_engine", DRAWING_ENGINE_SOFTWARE, Enum_DrawingEngine);
             model->uncap_fps = reader->GetBoolean("uncap_fps", false);
+            model->touch_ui = reader->GetBoolean("touch_ui", false);
             model->use_vsync = reader->GetBoolean("use_vsync", true);
             model->use_virtual_floor = reader->GetBoolean("use_virtual_floor", true);
 
